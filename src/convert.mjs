@@ -1,3 +1,4 @@
+const atob = require("atob");
 const BMP_HEADER_BASE64 =
   'Qk0AAAAAAAAAAHoAAABsAAAAAAAAAAAAAAABACAAAwAAAAAAAADDDgAAww4AAAAAAAAAAAAA/wAAAAD/AAAAAP8AAAAA/0JHUnM';
 const BMP_HEADER = Uint8Array.from(atob(BMP_HEADER_BASE64), (c) => c.charCodeAt(0));
@@ -9,8 +10,6 @@ const BMP_HEIGHT_OFFSET = 22;
 const BMP_IMAGESIZE_OFFSET = 34;
 const BMP_RED_BITFIELDS_OFFSET = 54;
 const BMP_GREEN_BITFIELDS_OFFSET = 62;
-
-const IS_WIN = /Trident|Edge/.test(navigator.userAgent);
 
 /**
  * @param {ImageData} imageData
@@ -27,19 +26,10 @@ const convert = ({ width, height, data }) => {
   uint8Array.set(BMP_HEADER);
   setUint32(BMP_FILESIZE_OFFSET, fileSize);
   setUint32(BMP_WIDTH_OFFSET, width);
-  setUint32(BMP_HEIGHT_OFFSET, -height);
+  setUint32(BMP_HEIGHT_OFFSET, height);
   setUint32(BMP_IMAGESIZE_OFFSET, dataLength);
 
   uint8Array.set(data, BMP_HEADER_LENGTH);
-  if (IS_WIN) {
-    // RGBA -> BGRA
-    setUint32(BMP_RED_BITFIELDS_OFFSET, 0x00ff0000);
-    setUint32(BMP_GREEN_BITFIELDS_OFFSET, 0x000000ff);
-    for (let offset = 0; offset < dataLength; offset += 4) {
-      uint8Array[BMP_HEADER_LENGTH + offset] = data[offset + 2];
-      uint8Array[BMP_HEADER_LENGTH + 2 + offset] = data[offset];
-    }
-  }
 
   return uint8Array;
 };
